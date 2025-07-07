@@ -16,6 +16,7 @@
       {
         "label": "off"
       }
-    ]
+    ],
+    "highest-available-document-mode": "off"
   }
 }

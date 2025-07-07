@@ -59,6 +59,82 @@ const displayPopularShows = async () => {
   })
 }
 
+// Display Movie Details
+const displayMovieDetails = async () => {
+  const movieId = new URLSearchParams(window.location.search).get("id")
+  if (!movieId) {
+    console.error("Movie ID not found in URL")
+    return
+  }
+  const movie = await fetchData(`movie/${movieId}`)
+  const div = document.createElement("div")
+  div.classList.add("movie-details")
+  div.innerHTML = `   <div class="details-top">
+          <div>
+            ${
+              movie.poster_path
+                ? `<img src="https://image.tmdb.org/t/p/w500${movie.poster_path}" alt="${movie.title}">`
+                : `<img src="../images/no-image.jpg" alt="${movie.title}">`
+            }
+          </div>
+          <div>
+            <h2>${movie.title}</h2>
+            <p>
+              <i class="fas fa-star text-primary"></i>
+              ${movie.vote_average.toFixed(1)} / 10
+            </p>
+            <p class="text-muted">Release Date: ${movie.release_date}</p>
+            <p>
+                ${movie.overview ? movie.overview : "No overview available."}
+            </p>
+       
+        <div class='blokInfo'>
+          <div class="list-group">       
+            <h5 class="text-secondary">Genres</h5>
+            <ul >
+              ${movie.genres.map((genre) => `<li>${genre.name}</li>`).join("")}
+            </ul>
+          </div>
+          <div class="list-group"> 
+           <h5 class="text-secondary">Languages</h5>
+            <ul >
+                ${movie.spoken_languages
+                  .map((lang) => `<li>${lang.name}</li>`)
+                  .join("")}
+            </ul>
+           </div>
+        </div>
+            <a href="${
+              movie.homepage
+            }" rel="noopener noreferrer" target="_blank" class="btn">Visit Movie Homepage</a>
+          </div>
+        </div>
+        <div class="details-bottom">
+          <h2>Movie Info</h2>
+          <ul>
+            <li><span class="text-secondary">Budget:</span> ${
+              movie.budget ? `$${addCommas(movie.budget)}` : "N/A"
+            }</li>
+            <li><span class="text-secondary">Revenue:</span> ${
+              movie.revenue ? `$${addCommas(movie.revenue)}` : "N/A"
+            }</li>
+            <li><span class="text-secondary">Runtime:</span> ${
+              movie.runtime ? `${movie.runtime} minutes` : "N/A"
+            }</li>
+            <li><span class="text-secondary">Status:</span> ${
+              movie.status ? movie.status : "N/A"
+            } -  ${movie.release_date ? movie.release_date : "N/A"}</li>
+          </ul>
+          <h4>Production Companies</h4>
+          <div class="list-group">${movie.production_companies
+            .map((company) => ` <span>${company.name}</span>`)}</div>
+        </div>`
+
+  // console.log(movie);
+
+  document.querySelector("#movie-details").appendChild(div)
+}
+
 // Fetch Data from API
 const fetchData = async (endpoint) => {
   const baseUrl = "https://api.themoviedb.org/3/" // Example base URL
@@ -96,6 +172,10 @@ const highlightActiveLink = () => {
   })
 }
 
+// Add Commas To Numbers
+const addCommas = (number) =>
+  number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+
 // Initialize the application
 function init() {
   switch (global.currentPage) {
@@ -110,7 +190,7 @@ function init() {
       break
     case "/movie-details.html":
       // Movie Details Page
-      console.log("Movie Details Page")
+      displayMovieDetails()
       break
     case "/tv-details.html":
       // TV Details Page
