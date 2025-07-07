@@ -343,17 +343,19 @@ section h2 {
 }
 
 .blokInfo {
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
-    margin-top: 20px;
-  }
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 20px;
+}
 
-  .list-group {
-    padding: 0;
-    margin: 0;
-    width: 100%;
-  }
+.list-group {
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
+
+
 
 /* Make a mobile responsive */
 @media (max-width: 768px) {
@@ -382,6 +384,4 @@ section h2 {
   .details-bottom {
     padding: 20px;
   }
-
-  
 }

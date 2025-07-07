@@ -67,6 +67,9 @@ const displayMovieDetails = async () => {
     return
   }
   const movie = await fetchData(`movie/${movieId}`)
+
+  displayBackgroundImage("movie", movie.backdrop_path)
+
   const div = document.createElement("div")
   div.classList.add("movie-details")
   div.innerHTML = `   <div class="details-top">
@@ -126,8 +129,9 @@ const displayMovieDetails = async () => {
             } -  ${movie.release_date ? movie.release_date : "N/A"}</li>
           </ul>
           <h4>Production Companies</h4>
-          <div class="list-group">${movie.production_companies
-            .map((company) => ` <span>${company.name}</span>`)}</div>
+          <div class="list-group">${movie.production_companies.map(
+            (company) => ` <span>${company.name}</span>`
+          )}</div>
         </div>`
 
   // console.log(movie);
@@ -135,6 +139,27 @@ const displayMovieDetails = async () => {
   document.querySelector("#movie-details").appendChild(div)
 }
 
+// Display Bckground Image On Details Page
+const displayBackgroundImage = (type, backgroundPath) =>{
+    const overlayDiv = document.createElement("div")
+    overlayDiv.style.backgroundImage = `url(https://image.tmdb.org/t/p/original/${backgroundPath})`
+    overlayDiv.style.backgroundSize = "cover"
+    overlayDiv.style.backgroundPosition = "center"
+    overlayDiv.style.backgroundRepeat = "no-repeat" 
+    overlayDiv.style.height = "100vh"
+    overlayDiv.style.width = "100%"
+    overlayDiv.style.position = "absolute"
+    overlayDiv.style.top = "0"
+    overlayDiv.style.left = "0"
+    overlayDiv.style.zIndex = "-1"
+    overlayDiv.style.opacity = "0.2"
+    
+    if (type === "movie") {
+        document.querySelector("#movie-details").appendChild(overlayDiv)
+    } else {
+        document.querySelector("#show-details").appendChild(overlayDiv)
+    }
+}
 // Fetch Data from API
 const fetchData = async (endpoint) => {
   const baseUrl = "https://api.themoviedb.org/3/" // Example base URL
