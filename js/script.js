@@ -245,6 +245,71 @@ const displayBackgroundImage = (type, backgroundPath) => {
     document.querySelector("#show-details").appendChild(overlayDiv)
   }
 }
+
+// Displaye Slider Movies
+const displaySliderMovies = async () => {
+  const { results } = await fetchData("movie/now_playing")
+  results.forEach((movie) => {
+    const div = document.createElement("div")
+    div.classList.add("swiper-slide")
+    div.innerHTML = `
+        <a href="movie-details.html?id=${movie.id}">
+        <img src="https://image.tmdb.org/t/p/w500${movie.poster_path}" alt="${
+      movie.title
+    }">
+        </a>
+        <h4 class="swiper-rating">
+          <i class="fas fa-star text-primary"></i>
+          ${movie.vote_average.toFixed(1)} / 10 
+        </h4>
+      `
+    document.querySelector(".swiper-wrapper").appendChild(div)
+  })
+
+  // Initialize Swiper after adding slides
+  initSwiper()
+}
+
+// Display Swiper
+const initSwiper = () => {
+  const swiper = new Swiper(".swiper", {
+    slidesPerView: 1,
+    spaceBetween: 30,
+    freeMode: true,
+    loop: true,
+    pagination: {
+      el: ".swiper-pagination",
+      clickable: true,
+    },
+    navigation: {
+      nextEl: ".swiper-button-next",
+      prevEl: ".swiper-button-prev",
+    },
+    autoplay: {
+      delay: 4000,
+      disableOnInteraction: false,
+    },
+    breakpoints: {
+      320: {
+        slidesPerView: 1,
+        spaceBetween: 20,
+      },
+      640: {
+        slidesPerView: 2,
+        spaceBetween: 20,
+      },
+      768: {
+        slidesPerView: 3,
+        spaceBetween: 30,
+      },
+      1024: {
+        slidesPerView: 4,
+        spaceBetween: 30,
+      },
+    },
+  })
+}
+
 // Fetch Data from API
 const fetchData = async (endpoint) => {
   const baseUrl = "https://api.themoviedb.org/3/" // Example base URL
@@ -292,6 +357,7 @@ function init() {
     case "/":
     case "/index.html":
       // Home Page
+      displaySliderMovies()
       displayPopularMovies()
       break
     case "/shows.html":
