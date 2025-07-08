@@ -1,6 +1,19 @@
 // Global Current Variables
 const global = {
   currentPage: window.location.pathname,
+  api: {
+    apiKey: "7f8dc4a1d91ab7668681c5e28438336c",
+    baseUrl: "https://api.themoviedb.org/3/",
+  },
+  search: {
+    type: "movie", // "movie" or "tv"
+    page: 1,
+    term: "",
+    totalPages: 0,
+    totalResults: 0,
+    results: [],
+    query: "",
+  },
 }
 
 // Display Populare Movies
@@ -312,10 +325,19 @@ const initSwiper = () => {
 
 // Fetch Data from API
 const fetchData = async (endpoint) => {
-  const baseUrl = "https://api.themoviedb.org/3/" // Example base URL
-  // Import API configuration
-  const apiKey = "7f8dc4a1d91ab7668681c5e28438336c"
+  const { apiKey, baseUrl } = global.api
 
+  if (!apiKey || !baseUrl) {
+    console.error("API key or base URL is missing in the configuration.")
+    return
+  }
+
+  if (!endpoint) {
+    console.error("Endpoint is required to fetch data.")
+    return
+  }
+
+  // Show spinner while fetching data
   showSpinner(true)
 
   const response = await fetch(
@@ -325,8 +347,108 @@ const fetchData = async (endpoint) => {
     throw new Error("Failed to fetch data")
   }
   const data = await response.json()
+
+  // Hide spinner after fetching data
+  showSpinner(false)
+
+  return data
+}
+
+// Create Search Functionality
+const search = async () => {
+  const queryString = window.location.search
+  const urlParams = new URLSearchParams(queryString)
+
+  global.search.type = urlParams.get("type")
+  global.search.term = urlParams.get("search-term")
+
+  if (global.search.term !== "" && global.search.term !== null) {
+    // If search term is present, fetch the search results
+    const { results, total_pages, page } = await fetchSearchResults()
+    console.log(results)
+    if (results.length === 0) {
+      // If no results found, show an alert or handle it accordingly
+      showAlert("No results found.")
+      return
+    }
+    displaySearchResults(results)
+    document.querySelector("#search-term").value = ""
+    global.search.totalPages = total_pages
+    global.search.page = page
+  } else {
+    // If search term is missing, log an error or handle it accordingly
+    showAlert("Please enter a search term.")
+    return
+  }
+}
+
+// Fetch Search Results
+const fetchSearchResults = async () => {
+  const { type, term } = global.search
+  if (!type || !term) {
+    console.error("Search type or term is missing.")
+    return []
+  }
+
+  // Show spinner while fetching search results
+  showSpinner(true)
+
+  const response = await fetch(
+    `${global.api.baseUrl}search/${type}?api_key=${global.api.apiKey}&query=${term}`
+  )
+  if (!response.ok) {
+    throw new Error("Failed to fetch search results")
+  }
+  const data = await response.json()
+  if (!data || !data.results) {
+    console.error("No results found in the search data.")
+    return []
+  }
+  // Hide spinner after fetching search results
   showSpinner(false)
   return data
+}
+
+// Display Search Results
+const displaySearchResults = (results) => {
+  results.forEach((result) => {
+    const div = document.createElement("div")
+    div.classList.add("card")
+    div.innerHTML = `
+            <a href="${global.search.type}-details.html?id=${result.id}">
+            ${
+              result.poster_path
+                ? `<img src="https://image.tmdb.org/t/p/w500/${
+                    result.poster_path
+                  }" class="card-img-top" 
+                alt="${
+                  global.search.type === "movie" ? result.title : result.name
+                }">`
+                : `<img src="../images/no-image.jpg" class="card-img-top" alt="${
+                    global.search.type === "movie" ? result.title : result.name
+                  }">`
+            }
+            </a>
+            <div class="card-body">
+            <h5 class="card-title">${
+              global.search.type === "movie" ? result.title : result.name
+            }</h5>
+            <p class="card-text">  
+                <small class="text-muted">Release Date: ${
+                  global.search.type === "movie"
+                    ? result.release_date
+                    : result.first_air_date
+                }</small>
+                <br>
+                <small class="text-muted">Rating: ${result.vote_average.toFixed(
+                  1
+                )}</small>
+                <br>
+            </p>
+            </div>
+        `
+    document.querySelector("#search-results").appendChild(div)
+  })
 }
 
 // Create a function to handle spinner display
@@ -345,6 +467,21 @@ const highlightActiveLink = () => {
       link.classList.remove("active")
     }
   })
+}
+
+// Show an alert message
+const showAlert = (message, className = "error") => {
+  const alertEl = document.createElement("div")
+  alertEl.classList.add("alert", className)
+  alertEl.appendChild(document.createTextNode(message))
+  //   alertEl.style.position = "fixed"
+  //   alertEl.style.top = "20px"
+  //   alertEl.style.right = "20px"
+  //   alertEl.style.zIndex = "1000"
+  document.querySelector("#alert").appendChild(alertEl)
+  setTimeout(() => {
+    alertEl.remove()
+  }, 3000)
 }
 
 // Add Commas To Numbers
@@ -374,7 +511,7 @@ function init() {
       break
     case "/search.html":
       // Search Page
-      console.log("Search Page")
+      search()
       break
   }
   highlightActiveLink()
