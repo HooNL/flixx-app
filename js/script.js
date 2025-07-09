@@ -364,8 +364,11 @@ const search = async () => {
 
   if (global.search.term !== "" && global.search.term !== null) {
     // If search term is present, fetch the search results
-    const { results, total_pages, page } = await fetchSearchResults()
-    console.log(results)
+    const { results, total_pages, page, total_results } =
+      await fetchSearchResults()
+    global.search.page = page
+    global.search.totalPages = total_pages
+    global.search.totalResults = total_results
     if (results.length === 0) {
       // If no results found, show an alert or handle it accordingly
       showAlert("No results found.")
@@ -373,8 +376,6 @@ const search = async () => {
     }
     displaySearchResults(results)
     document.querySelector("#search-term").value = ""
-    global.search.totalPages = total_pages
-    global.search.page = page
   } else {
     // If search term is missing, log an error or handle it accordingly
     showAlert("Please enter a search term.")
@@ -394,7 +395,7 @@ const fetchSearchResults = async () => {
   showSpinner(true)
 
   const response = await fetch(
-    `${global.api.baseUrl}search/${type}?api_key=${global.api.apiKey}&query=${term}`
+    `${global.api.baseUrl}search/${type}?api_key=${global.api.apiKey}&query=${term}&page=${global.search.page}&language=en-US`
   )
   if (!response.ok) {
     throw new Error("Failed to fetch search results")
@@ -411,6 +412,15 @@ const fetchSearchResults = async () => {
 
 // Display Search Results
 const displaySearchResults = (results) => {
+  // Clear previous search results
+  const searchResultsContainer = document.querySelector("#search-results")
+  searchResultsContainer.innerHTML = ""
+  const paginationContainer = document.querySelector("#pagination")
+  paginationContainer.innerHTML = ""
+  const searchResultsHeading = document.querySelector("#search-results-heading")
+  searchResultsHeading.textContent = ""
+
+  // Display the search results
   results.forEach((result) => {
     const div = document.createElement("div")
     div.classList.add("card")
@@ -447,8 +457,91 @@ const displaySearchResults = (results) => {
             </p>
             </div>
         `
+
+    // Display the search results heading
+    const searchResultsHeading = document.querySelector(
+      "#search-results-heading"
+    )
+    searchResultsHeading.textContent = `Search Results for "${global.search.term}" (${global.search.totalResults} results)`
     document.querySelector("#search-results").appendChild(div)
   })
+
+  // Display pagination
+  displayPagination()
+}
+
+// Display Pagination
+const displayPagination = () => {
+  const paginationDiv = document.createElement("div")
+  paginationDiv.classList.add("pagination")
+  paginationDiv.innerHTML = `
+     <button class="btn btn-primary" id="prev">Prev</button>
+          <button class="btn btn-primary" id="next">Next</button>
+          <div class="page-counter">Page ${global.search.page} of ${global.search.totalPages}</div>
+  `
+
+  // Append pagination to the search results container
+  document.querySelector("#pagination").appendChild(paginationDiv)
+
+  // Disable buttons if on first or last page
+  if (global.search.page === 1) {
+    const prevButton = (document.querySelector("#prev").disabled = true)
+  }
+  if (global.search.page === global.search.totalPages) {
+    const nextButton = (document.querySelector("#next").disabled = true)
+  }
+
+  // Add event listeners for pagination buttons
+  const prevButton = document.querySelector("#prev")
+  prevButton.addEventListener("click", async () => {
+    const { results, total_pages } = await fetchSearchResults()
+    displaySearchResults(results)
+    global.search.page--
+  })
+  const nextButton = document.querySelector("#next")
+  nextButton.addEventListener("click", async () => {
+    const { results, total_pages } = await fetchSearchResults()
+    displaySearchResults(results)
+    global.search.page++
+  })
+
+  // Previous button
+  //   if (global.search.page > 1) {
+  //     const prevButton = document.querySelector("#prev")
+  //     prevButton.addEventListener("click", () => {
+  //       global.search.page--
+  //       search()
+  //     })
+  //   }
+
+  // Next button
+  //   if (global.search.page < global.search.totalPages) {
+  //     const nextButton = document.querySelector("#next")
+  //     nextButton.addEventListener("click", () => {
+  //       global.search.page++
+  //       search()
+  //     })
+  //   }
+
+  // Previous button
+  //   if (global.search.page > 1) {
+  //     const prevButton = createPageButton(global.search.page - 1)
+  //     prevButton.textContent = "Prev"
+  //     paginationDiv.appendChild(prevButton)
+  //   }
+
+  // Next button
+  //   if (global.search.page < global.search.totalPages) {
+  //     const nextButton = createPageButton(global.search.page + 1)
+  //     nextButton.textContent = "Next"
+  //     paginationDiv.appendChild(nextButton)
+  //   }
+
+  // Page counter
+  //   const pageCounter = document.createElement("div")
+  //   pageCounter.classList.add("page-counter")
+  //   pageCounter.textContent = `Page ${global.search.page} of ${global.search.totalPages}`
+  //   paginationDiv.appendChild(pageCounter)
 }
 
 // Create a function to handle spinner display
@@ -474,10 +567,10 @@ const showAlert = (message, className = "error") => {
   const alertEl = document.createElement("div")
   alertEl.classList.add("alert", className)
   alertEl.appendChild(document.createTextNode(message))
-  //   alertEl.style.position = "fixed"
-  //   alertEl.style.top = "20px"
-  //   alertEl.style.right = "20px"
-  //   alertEl.style.zIndex = "1000"
+  alertEl.style.position = "fixed"
+  alertEl.style.top = "20px"
+  alertEl.style.right = "20px"
+  alertEl.style.zIndex = "1000"
   document.querySelector("#alert").appendChild(alertEl)
   setTimeout(() => {
     alertEl.remove()
