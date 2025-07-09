@@ -577,6 +577,128 @@ const showAlert = (message, className = "error") => {
   }, 3000)
 }
 
+// See trending Movies
+const seeTrendingMovies = async () => {
+  const { results } = await fetchData("trending/movie/day")
+  const trendingMoviesContainer = document.querySelector("#trending-movies")
+  trendingMoviesContainer.innerHTML = "" // Clear previous content
+
+  results.forEach((movie) => {
+    const movieCard = createMovieCard(movie)
+    trendingMoviesContainer.appendChild(movieCard)
+  })
+}
+// Create a movie card element
+const createMovieCard = (movie) => {
+  const div = document.createElement("div")
+  div.classList.add("card")
+  div.innerHTML = `
+        <a href="movie-details.html?id=${movie.id}">
+        ${
+          movie.poster_path
+            ? `<img src="https://image.tmdb.org/t/p/w500${movie.poster_path}" class="card-img-top" alt="${movie.title}">`
+            : `<img src="../images/no-image.jpg" class="card-img-top" alt="${movie.title}">`
+        }
+        </a>
+        <div class="card-body">
+          <h5 class="card-title">${movie.title}</h5>
+          <p class="card-text">
+            <small class="text-muted">Release: ${movie.release_date}</small>
+          </p>
+        </div>
+      `
+  return div
+}
+
+// See Person Details
+const seePersonDetails = async (personId) => {
+  const person = await fetchData(`person/${personId}`)
+  const personDetailsContainer = document.querySelector("#person-details")
+  const personCard = createPersonCard(person)
+  personDetailsContainer.appendChild(personCard)
+  // Show spinner while fetching person details
+  showSpinner(true)
+
+  // Show spinner after fetching person details
+  showSpinner(false)
+}
+
+const showPersonDetails = async () => {
+  const person = await fetchData(
+    `person/${new URLSearchParams(window.location.search).get("id")}`
+  )
+  if (!person) {
+    console.error("Person not found")
+    return
+  }
+  const seePersonDetails = document.createElement("div")
+  seePersonDetails.classList.add("person-details")
+  seePersonDetails.innerHTML = `
+        <div class="details-top">
+          <div>
+            ${
+              person.profile_path
+                ? `<img src="https://image.tmdb.org/t/p/w500${person.profile_path}" alt="${person.name}">`
+                : `<img src="../images/no-image.jpg" alt="${person.name}">`
+            }
+          </div>
+          <div class="details-info">
+            <h2>${person.name}</h2>
+            <p><strong>Biography:</strong> ${person.biography}</p>
+            <p><strong>Birthday:</strong> ${person.birthday}</p>
+            <p><strong>Place of Birth:</strong> ${person.place_of_birth}</p>
+            <p><strong>Known For:</strong> ${person.known_for_department}</p>
+            <p><strong>Also Known As:</strong> ${person.also_known_as.join(
+              ", "
+            )}</p>
+            <p><strong>Popularity:</strong> ${person.popularity}</p>
+            <p><strong>Gender:</strong> ${
+              person.gender === 1 ? "Female" : "Male"
+            }</p>
+            <a href="${
+              person.homepage
+            }" rel="noopener noreferrer" target="_blank" class="btn">Visit Person Homepage</a>
+
+          </div>
+        </div>
+       
+      `
+  document.querySelector("#sh-details").appendChild(seePersonDetails)
+}
+
+// Create a person card element
+const createPersonCard = (person) => {
+  const div = document.createElement("div")
+  div.classList.add("card")
+  div.innerHTML = `
+        <a href="person-details.html?id=${person.id}">
+        ${
+          person.profile_path
+            ? `<img src="https://image.tmdb.org/t/p/w500${person.profile_path}" class="card-img-top" alt="${person.name}">`
+            : `<img src="../images/no-image.jpg" class="card-img-top" alt="${person.name}">`
+        }
+        </a>
+        <div class="card-body">
+          <h5 class="card-title">${person.name}</h5>
+          <p class="card-text">
+            <small class="text-muted">Known For: ${
+              person.known_for_department
+            }</small>
+            <br>
+            <small class="text-muted">Popularity: ${person.popularity}</small>
+            <br>
+            <small class="text-muted">Birthday: ${person.birthday}</small>
+            <br>
+            <small class="text-muted">Place of Birth: ${
+              person.place_of_birth
+            }</small>
+          </p>
+        </div>
+      `
+
+  return div
+}
+
 // Add Commas To Numbers
 const addCommas = (number) =>
   number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
@@ -592,6 +714,9 @@ function init() {
       break
     case "/shows.html":
       // Shows Page
+      seePersonDetails(123457)
+
+      seeTrendingMovies()
       displayPopularShows()
       break
     case "/movie-details.html":
@@ -601,6 +726,10 @@ function init() {
     case "/tv-details.html":
       // TV Details Page
       displayTVDetails()
+      break
+    case "/person-details.html":
+      // Person Details Page
+      showPersonDetails()
       break
     case "/search.html":
       // Search Page
